@@ -29,7 +29,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <button class="btn btn-primary" >Login</button>
+                            <button class="btn btn-success btn-light btn-large" >Login</button>
                             {{ loading }}
                             {{ status }}
                         </div>
@@ -61,7 +61,7 @@
                         </div>
                         <div class="form-group">
                             <label for="">Confirm Password:</label>
-                            <input type="password" required class="form-control" placeholder="Confirm Passowrd" v-model="model.confirm_password">
+                            <input type="password" required class="form-control" placeholder="Confirm Passowrd" v-model="model.c_password">
                         </div>
 
                         <div class="form-group">
@@ -104,7 +104,7 @@ export default {
   methods: {
     validate() {
       // checks all the form params are set and the passwords match
-      if( this.model.password != this.model.c_password){
+      if (this.model.password != this.model.c_password) {
         return false;
       }
 
@@ -113,31 +113,30 @@ export default {
     register() {
       const formData = new FormData();
       let valid = this.validate();
-      if( valid){
+      if (valid) {
         formData.append("name", this.model.name);
         formData.append("email", this.model.email);
         formData.append("company_name", this.model.company_name);
         formData.append("password", this.model.password);
-  
+
         this.loading = "Registering you, please wait";
         // Post to server
         axios.post("http://localhost:3128/register", formData).then(res => {
           // Post a status message
           this.loading = "";
           if (res.data.status == true) {
-            // now send the user to the next route
-            console.log(res.data.user);
+            // store the data in localStorage
+            localStorage.setItem("token", res.data.token);
+            localStorage.setItem("user", JSON.stringify(res.data.user));
             // now send the user to the next route
             this.$router.push({
-              name: "Dashboard",
-              params: { user: res.data.user }
+              name: "Dashboard"
             });
           } else {
             this.status = res.data.message;
           }
         });
-      }
-      else{
+      } else {
         alert("Passwords do not match");
       }
     },
@@ -153,12 +152,13 @@ export default {
         console.log(res);
         this.loading = "";
         if (res.data.status == true) {
-          // this.registerStatus = res.data.message;
-          console.log(res.data.user);
+          // store the data in localStorage
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+
           // now send the user to the next route
           this.$router.push({
-            name: "Dashboard",
-            params: { user: res.data.user }
+            name: "Dashboard"
           });
         } else {
           this.status = res.data.message;
