@@ -1,82 +1,62 @@
 <template>
-  <div>
-    <Header />
-
-    <div class="container">
-
-    <ul class="nav nav-pills nav-fill mb-3" id="pills-tab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="pills-login-tab" data-toggle="pill" href="#pills-login" role="tab" aria-controls="pills-upload" aria-selected="true">Log in</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="pills-register-tab" data-toggle="pill" href="#pills-register" role="tab" aria-controls="pills-verify" aria-selected="false">Register</a>
-        </li>
-    </ul>
-
-    <div class="tab-content" id="pills-tabContent">
-        <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="pills-login-tab">
-            <div class="row">
-                <div class="col-md-12">
-                    <form @submit.prevent="login">
-                        <div class="form-group">
-                            <label for="">Email:</label>
-                            <input type="email" required class="form-control" placeholder="eg chris@invoiceapp.com" v-model="model.email">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="">Password:</label>
-                            <input type="password" required class="form-control" placeholder="Enter Password" v-model="model.password">
-                        </div>
-                        
-                        <div class="form-group">
-                            <button class="btn btn-primary" >Login</button>
-                            {{ loading }}
-                            {{ status }}
-                        </div>
-                    </form> 
-                </div>
-            </div>
+  <div class="single-page">
+    <Header v-bind:user="user"/>
+    <!--  display invoice data -->
+    <div class="invoice">
+      <!-- display invoice name here -->
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h3>Invoice #{{ invoice.id }} by {{ user.company_name }}</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Transaction Name</th>
+                  <th scope="col">Price ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="txn in transactions">
+                  <tr :key="txn.id">
+                    <th>{{ txn.id }}</th>
+                    <td>{{ txn.name }}</td>
+                    <td>{{ txn.price }} </td>
+                  </tr>
+                </template>
+              </tbody>
+              <tfoot>
+                <td></td>
+                <td style="text-align: right">Total :</td>
+                <td><strong>$ {{ total_price }}</strong></td>
+              </tfoot>
+            </table>
+          </div>
         </div>
-        <div class="tab-pane fade" id="pills-register" role="tabpanel" aria-labelledby="pills-register-tab">
-            <div class="row">
-                <div class="col-md-12">
-                    <form @submit.prevent="register">
-                        <div class="form-group">
-                            <label for="">Name:</label>
-                            <input type="text" required class="form-control" placeholder="eg Chris" v-model="model.name">
-                        </div>
 
-                        <div class="form-group">
-                            <label for="">Email:</label>
-                            <input type="email" required class="form-control" placeholder="eg chris@invoiceapp.com" v-model="model.email">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="">Company Name:</label>
-                            <input type="text" required class="form-control" placeholder="eg Chris Tech" v-model="model.company_name">
-                        </div>
-                        <div class="form-group">
-                            <label for="">Password:</label>
-                            <input type="password" required class="form-control" placeholder="Enter Password" v-model="model.password">
-                        </div>
-                        <div class="form-group">
-                            <label for="">Confirm Password:</label>
-                            <input type="password" required class="form-control" placeholder="Confirm Passowrd" v-model="model.confirm_password">
-                        </div>
-
-                        <div class="form-group">
-                            <button class="btn btn-primary" >Register</button>
-                            {{ loading }}
-                            {{ status }}
-                        </div>
-                    </form>
-                </div>
+        <div class="row">
+          <form @submit.prevent="send" class="col-md-12">
+            <h3>Enter Recipient's Name and Email to Send Invoice</h3>
+            <div class="form-group">
+              <label for="">Recipient Name</label>
+              <input type="text" required class="form-control" placeholder="eg Chris" v-model="recipient.name">
             </div>
+
+            <div class="form-group">
+              <label for="">Recipient Email</label>
+              <input type="email" required placeholder="eg chris@invoiceapp.com" class="form-control" v-model="recipient.email">
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-primary" >Send Invoice</button>
+                {{ loading }}
+                {{ status }}
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
@@ -84,73 +64,63 @@ import Header from "./Header";
 import axios from "axios";
 
 export default {
-  name: "SignUp",
+  name: "SingleInvoice",
   components: {
     Header
   },
   data() {
     return {
-      model: {
-        name: "",
-        email: "",
-        password: "",
-        c_password: "",
-        company_name: ""
+      invoice: {},
+      transactions: [],
+      user: JSON.parse(localStorage.getItem("user")),
+      total_price: 0,
+      recipient : {
+        name: '',
+        email: ''
       },
-      loading: "",
-      status: ""
+      loading : '',
+      status: '',
     };
   },
   methods: {
-    validate() {
-      // checks all the form params are set and the passwords match
-    },
-    register() {
+    send() {
+      // prepare the formdata
+      this.loading = "Sending Invoice, please wait...."
       const formData = new FormData();
-      let valid = this.validate();
-      formData.append("name", this.model.name);
-      formData.append("email", this.model.email);
-      formData.append("company_name", this.model.company_name);
-      formData.append("password", this.model.password);
-
-      this.loading = "Registering you, please wait";
-      // Post to server
-      axios.post("http://localhost:3128/register", formData).then(res => {
-        // Post a status message
-        this.loading = "";
-        if (res.data.status == true) {
-          this.status = res.data.message;
-          // now send the user to the next route
-        } else {
-          this.status = res.data.message;
-        }
-      });
-    },
-    login() {
-      const formData = new FormData();
-      let valid = this.validate();
-      formData.append("email", this.model.email);
-      formData.append("password", this.model.password);
-
-      this.loading = "Signing in";
-      // Post to server
-      axios.post("http://localhost:3128/login", formData).then(res => {
-        // Post a status message
+      formData.append("user", JSON.stringify(this.user));
+      formData.append("recipient", JSON.stringify(this.recipient));
+      axios.post("http://localhost:3128/sendmail", formData, {
+        headers: {"x-access-token": localStorage.getItem("token")}
+      }).then(res => {
         console.log(res);
-        this.loading = "";
+        this.loading = '';
+        this.status = 'Invoice Sent'
+      });   
+    }
+  },
+  mounted() {
+    
+    // make request to fetch invoice data
+    this.user = JSON.parse(localStorage.getItem("user"));
+    let token = localStorage.getItem("token");
+    let invoice_id = this.$route.params.invoice_id;
+    axios
+      .get(`http://localhost:3128/invoice/user/${this.user.id}/${invoice_id}`, {
+        headers: {
+          "x-access-token": token
+        }
+      })
+      .then(res => {
         if (res.data.status == true) {
-          // this.registerStatus = res.data.message;
-          console.log(res.data.user);
-          // now send the user to the next route
-          this.$router.push({
-            name: "Dashboard",
-            params: { user: res.data.user }
+          this.transactions = res.data.transactions;
+          this.invoice = res.data.invoice;
+          let total = 0;
+          this.transactions.forEach(element => {
+            total += parseInt(element.price);
           });
-        } else {
-          this.status = res.data.message;
+          this.total_price = total;
         }
       });
-    }
   }
 };
 </script>
@@ -171,5 +141,11 @@ li {
 }
 a {
   color: #426cb9;
+}
+.single-page {
+  background-color: #ffffffe5;
+}
+.invoice {
+  margin-top: 20px;
 }
 </style>

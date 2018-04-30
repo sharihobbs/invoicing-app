@@ -23,7 +23,7 @@
                         <td>{{ invoice.name }}</td>
                         <td v-if="invoice.paid == 0 "> Unpaid </td>
                         <td v-else> Paid </td>
-                        <td ><a href="#" class="btn btn-success">TO INVOICE</a></td>
+                        <td ><router-link :to="{ name: 'SingleInvoice', params: { invoice_id: invoice.id }}" class="btn btn-success">TO INVOICE</router-link>  </td>
                       </tr>
                     </template>
                   </tbody>
@@ -45,12 +45,17 @@ export default {
   data() {
     return {
       invoices: [],
-      user: this.$route.params.user
+      user: '',
     };
   },
   mounted() {
+    this.user = JSON.parse(localStorage.getItem('user'));
     axios
-      .get(`http://localhost:3128/invoice/user/${this.user.id}`)
+      .get(`http://localhost:3128/invoice/user/${this.user.id}`,
+        {
+          headers: {"x-access-token": localStorage.getItem("token")}
+        }
+      )
       .then(res => {
         if (res.data.status == true) {
           console.log(res.data.invoices);
