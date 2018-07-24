@@ -22,18 +22,18 @@
                             <label for="">Email:</label>
                             <input type="email" required class="form-control" placeholder="eg chris@invoiceapp.com" v-model="model.email">
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="">Password:</label>
                             <input type="password" required class="form-control" placeholder="Enter Password" v-model="model.password">
                         </div>
-                        
+
                         <div class="form-group">
                             <button class="btn btn-success btn-light btn-large" >Login</button>
                             {{ loading }}
                             {{ status }}
                         </div>
-                    </form> 
+                    </form>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
                             <label for="">Email:</label>
                             <input type="email" required class="form-control" placeholder="eg chris@invoiceapp.com" v-model="model.email">
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="">Company Name:</label>
                             <input type="text" required class="form-control" placeholder="eg Chris Tech" v-model="model.company_name">
@@ -61,7 +61,7 @@
                         </div>
                         <div class="form-group">
                             <label for="">Confirm Password:</label>
-                            <input type="password" required class="form-control" placeholder="Confirm Passowrd" v-model="model.c_password">
+                            <input type="password" required class="form-control" placeholder="Confirm Password" v-model="model.c_password">
                         </div>
 
                         <div class="form-group">
@@ -121,7 +121,7 @@ export default {
 
         this.loading = "Registering you, please wait";
         // Post to server
-        axios.post("http://localhost:3128/register", formData).then(res => {
+        axios.post("http://localhost:8080/register", formData).then(res => {
           // Post a status message
           this.loading = "";
           if (res.data.status == true) {
